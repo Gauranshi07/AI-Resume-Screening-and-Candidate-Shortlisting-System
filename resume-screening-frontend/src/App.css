@@ -1,3 +1,6 @@
+
+/* ==================== RESET ==================== */
+
 * {
   margin: 0;
   padding: 0;
@@ -24,7 +27,7 @@ body {
   overflow-x: hidden;
 }
 
-/* Scrollbar */
+/* ==================== SCROLLBAR ==================== */
 
 ::-webkit-scrollbar {
   width: 8px;
@@ -43,7 +46,7 @@ body {
   background: #344b65;
 }
 
-/* App */
+/* ==================== APP ==================== */
 
 .app {
   width: 100%;
@@ -52,11 +55,11 @@ body {
   border: none;
 }
 
-/* Navbar */
+/* ==================== NAVBAR ==================== */
 
 .navbar {
   width: 100%;
-  height: 65px;
+  min-height: 65px;
   padding: 0 7%;
   display: flex;
   justify-content: space-between;
@@ -103,7 +106,7 @@ body {
   border-radius: 50%;
 }
 
-/* Main */
+/* ==================== MAIN ==================== */
 
 main {
   width: 100%;
@@ -112,7 +115,7 @@ main {
   padding: 65px 25px 30px;
 }
 
-/* Hero */
+/* ==================== HERO ==================== */
 
 .hero {
   text-align: center;
@@ -142,7 +145,7 @@ main {
   line-height: 1.6;
 }
 
-/* Main Card */
+/* ==================== MAIN CARD ==================== */
 
 .screen-card {
   width: 100%;
@@ -152,226 +155,7 @@ main {
   padding: 30px;
 }
 
-/* Candidate Profile */
-
-.section-title {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.profile-icon {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #14263d;
-  color: #60a5fa;
-  font-size: 16px;
-}
-
-.section-title h2 {
-  font-size: 18px;
-  color: #f1f5f9;
-  margin-bottom: 4px;
-}
-
-.section-title p {
-  font-size: 11px;
-  color: #77869a;
-}
-
-/* No divider */
-
-.line {
-  display: none;
-}
-
-/* Form */
-
-.resume-form {
-  margin-top: 27px;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-}
-
-.form-group label {
-  font-size: 12px;
-  color: #cbd5e1;
-  margin-bottom: 7px;
-}
-
-.form-group input,
-.form-group select {
-  width: 100%;
-  height: 43px;
-  padding: 0 12px;
-  border: 1px solid #25374b;
-  border-radius: 5px;
-  background: #091522;
-  color: #dbe4ee;
-  outline: none;
-  font-size: 13px;
-}
-
-.form-group input:focus,
-.form-group select:focus {
-  border-color: #3b82f6;
-}
-
-.form-group input::placeholder {
-  color: #56677b;
-}
-
-.form-group select option {
-  background: #091522;
-  color: white;
-}
-
-/* Button */
-
-.screen-btn {
-  grid-column: 1 / -1;
-  height: 44px;
-  border: none;
-  border-radius: 5px;
-  background: #2563eb;
-  color: white;
-  font-weight: 600;
-  cursor: pointer;
-  margin-top: 3px;
-}
-
-.screen-btn:hover {
-  background: #1d4ed8;
-}
-
-/* Messages */
-
-.message {
-  margin-top: 20px;
-  padding: 13px;
-  font-size: 12px;
-  border-radius: 4px;
-}
-
-.loading {
-  background: #10243a;
-  color: #8eb9ed;
-}
-
-.error {
-  background: #321b1b;
-  color: #e9a2a2;
-}
-
-/* Result */
-
-.result {
-  margin-top: 25px;
-  padding: 22px;
-  background: #091522;
-  border: 1px solid #25466e;
-  border-radius: 6px;
-}
-
-.result-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.result-top small {
-  color: #718198;
-  font-size: 9px;
-  letter-spacing: 1.5px;
-}
-
-.result-top h2 {
-  margin-top: 7px;
-  font-size: 21px;
-  color: #f8fafc;
-}
-
-.result-top strong {
-  color: #60a5fa;
-  font-size: 25px;
-}
-
-.bar {
-  height: 5px;
-  background: #1c2b3c;
-  margin-top: 20px;
-  border-radius: 5px;
-  overflow: hidden;
-}
-
-.bar div {
-  height: 100%;
-  background: #3b82f6;
-}
-
-.result > p {
-  margin-top: 9px;
-  font-size: 10px;
-  color: #718198;
-}
-
-/* Footer */
-
-footer {
-  text-align: center;
-  color: #4f6074;
-  font-size: 10px;
-  margin-top: 25px;
-}
-
-/* Mobile */
-
-@media (max-width: 650px) {
-
-  .navbar {
-    padding: 0 20px;
-  }
-
-  .server-status {
-    display: none;
-  }
-
-  main {
-    padding: 45px 18px 30px;
-  }
-
-  .hero h1 {
-    font-size: 36px;
-  }
-
-  .hero div {
-    font-size: 13px;
-  }
-
-  .screen-card {
-    padding: 22px 18px;
-  }
-
-  .resume-form {
-    grid-template-columns: 1fr;
-  }
-
-  .screen-btn {
-    grid-column: auto;
-  }
-}
-
-/* Resume Upload Section */
+/* ==================== UPLOAD HEADING ==================== */
 
 .upload-heading {
   display: flex;
@@ -383,6 +167,7 @@ footer {
 .upload-icon {
   width: 36px;
   height: 36px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -403,6 +188,8 @@ footer {
   font-size: 11px;
 }
 
+/* ==================== UPLOAD ZONE ==================== */
+
 .upload-zone {
   position: relative;
   width: 100%;
@@ -416,7 +203,7 @@ footer {
   border-radius: 8px;
   background: #091522;
   text-align: center;
-  transition: border-color 0.2s, background 0.2s;
+  transition: border-color 0.2s ease, background 0.2s ease;
 }
 
 .upload-zone:hover,
@@ -458,6 +245,8 @@ footer {
   margin-bottom: 16px;
 }
 
+/* ==================== FILE BUTTONS ==================== */
+
 .choose-file-btn,
 .replace-file-btn {
   border: 1px solid #3b82f6;
@@ -465,15 +254,35 @@ footer {
   background: #2563eb;
   color: #fff;
   padding: 10px 20px;
+  font-family: inherit;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.2s ease, border-color 0.2s ease;
 }
 
 .choose-file-btn:hover,
-.replace-file-btn:hover {
+.replace-file-btn:hover:not(:disabled) {
   background: #1d4ed8;
+  border-color: #60a5fa;
+}
+
+.choose-file-btn:focus-visible,
+.replace-file-btn:focus-visible,
+.remove-file:focus-visible {
+  outline: 2px solid #93c5fd;
+  outline-offset: 3px;
+}
+
+.replace-file-btn {
+  margin-top: 15px;
+  padding: 9px 16px;
+  background: transparent;
+}
+
+.replace-file-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .file-hint {
@@ -482,6 +291,8 @@ footer {
   font-size: 10px;
   line-height: 1.5;
 }
+
+/* ==================== SELECTED FILE ==================== */
 
 .selected-file {
   display: flex;
@@ -524,6 +335,9 @@ footer {
   flex-shrink: 0;
   width: 30px;
   height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid #34465a;
   border-radius: 5px;
   background: transparent;
@@ -537,11 +351,78 @@ footer {
   color: #f87171;
 }
 
-.replace-file-btn {
-  margin-top: 15px;
-  padding: 8px 14px;
-  background: transparent;
+/* ==================== EXTRACT RESUME BUTTON ==================== */
+
+.extract-resume-btn {
+  width: 100%;
+  min-height: 48px;
+  margin-top: 16px;
+  padding: 12px 20px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  border: 1px solid #3b82f6;
+  border-radius: 7px;
+  background: #2563eb;
+  color: #ffffff;
+
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: center;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease,
+    opacity 0.2s ease;
 }
+
+.extract-resume-btn:hover:not(:disabled) {
+  background: #1d4ed8;
+  border-color: #60a5fa;
+}
+
+.extract-resume-btn:active:not(:disabled) {
+  transform: scale(0.99);
+}
+
+.extract-resume-btn:focus-visible {
+  outline: 2px solid #93c5fd;
+  outline-offset: 3px;
+}
+
+.extract-resume-btn:disabled {
+  opacity: 0.75;
+  cursor: wait;
+}
+
+/* Loading spinner */
+
+.extract-spinner {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+  display: inline-block;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: extract-spin 0.7s linear infinite;
+}
+
+@keyframes extract-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ==================== UPLOAD NOTE & ERRORS ==================== */
 
 .upload-note {
   display: flex;
@@ -554,6 +435,7 @@ footer {
 }
 
 .upload-note span {
+  flex-shrink: 0;
   color: #60a5fa;
 }
 
@@ -574,9 +456,243 @@ footer {
   background: #1b2a3b;
 }
 
-/* Upload section on small screens */
+/* ==================== CANDIDATE PROFILE ==================== */
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.profile-icon {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #14263d;
+  color: #60a5fa;
+  font-size: 16px;
+}
+
+.section-title h2 {
+  font-size: 18px;
+  color: #f1f5f9;
+  margin-bottom: 4px;
+}
+
+.section-title p {
+  font-size: 11px;
+  color: #77869a;
+}
+
+/* Hide the extra form divider */
+
+.line {
+  display: none;
+}
+
+/* ==================== FORM ==================== */
+
+.resume-form {
+  margin-top: 27px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 20px;
+}
+
+.form-group {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-size: 12px;
+  color: #cbd5e1;
+  margin-bottom: 7px;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  min-width: 0;
+  height: 43px;
+  padding: 0 12px;
+  border: 1px solid #25374b;
+  border-radius: 5px;
+  background: #091522;
+  color: #dbe4ee;
+  outline: none;
+  font-family: inherit;
+  font-size: 13px;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  border-color: #3b82f6;
+}
+
+.form-group input::placeholder {
+  color: #56677b;
+}
+
+.form-group select option {
+  background: #091522;
+  color: white;
+}
+
+/* ==================== SCREEN BUTTON ==================== */
+
+.screen-btn {
+  grid-column: 1 / -1;
+  width: 100%;
+  min-height: 44px;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 5px;
+  background: #2563eb;
+  color: white;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 3px;
+  transition: background 0.2s ease;
+}
+
+.screen-btn:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.screen-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* ==================== MESSAGES ==================== */
+
+.message {
+  margin-top: 20px;
+  padding: 13px;
+  font-size: 12px;
+  line-height: 1.6;
+  border-radius: 4px;
+  overflow-wrap: anywhere;
+}
+
+.loading {
+  background: #10243a;
+  color: #8eb9ed;
+}
+
+.error {
+  background: #321b1b;
+  color: #e9a2a2;
+}
+
+/* ==================== RESULT ==================== */
+
+.result {
+  margin-top: 25px;
+  padding: 22px;
+  background: #091522;
+  border: 1px solid #25466e;
+  border-radius: 6px;
+}
+
+.result-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+}
+
+.result-top small {
+  color: #718198;
+  font-size: 9px;
+  letter-spacing: 1.5px;
+}
+
+.result-top h2 {
+  margin-top: 7px;
+  font-size: 21px;
+  color: #f8fafc;
+}
+
+.result-top strong {
+  color: #60a5fa;
+  font-size: 25px;
+  white-space: nowrap;
+}
+
+.bar {
+  height: 5px;
+  background: #1c2b3c;
+  margin-top: 20px;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.bar div {
+  height: 100%;
+  background: #3b82f6;
+  transition: width 0.4s ease;
+}
+
+.result > p {
+  margin-top: 9px;
+  font-size: 10px;
+  color: #718198;
+}
+
+/* ==================== FOOTER ==================== */
+
+footer {
+  text-align: center;
+  color: #4f6074;
+  font-size: 10px;
+  margin-top: 25px;
+}
+
+/* ==================== MOBILE ==================== */
 
 @media (max-width: 650px) {
+  .navbar {
+    padding: 0 20px;
+  }
+
+  .server-status {
+    display: none;
+  }
+
+  main {
+    padding: 45px 18px 30px;
+  }
+
+  .hero h1 {
+    font-size: 36px;
+  }
+
+  .hero div {
+    font-size: 13px;
+  }
+
+  .screen-card {
+    padding: 22px 18px;
+  }
+
+  .resume-form {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+  }
+
+  .screen-btn {
+    grid-column: auto;
+  }
+
   .upload-zone {
     min-height: 205px;
     padding: 20px 12px;
@@ -593,5 +709,36 @@ footer {
 
   .file-details strong {
     font-size: 11px;
+  }
+
+  .extract-resume-btn {
+    min-height: 46px;
+    font-size: 13px;
+    padding: 11px 12px;
+  }
+
+  .result {
+    padding: 18px;
+  }
+
+  .result-top h2 {
+    font-size: 18px;
+  }
+
+  .result-top strong {
+    font-size: 22px;
+  }
+}
+
+/* ==================== REDUCED MOTION ==================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

@@ -84,6 +84,8 @@ function App() {
     setFileError("");
     setExtractionMessage("");
     setInitialData(null);
+    setResult(null);
+    setError("");
 
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -134,6 +136,7 @@ function App() {
       }
 
       setInitialData(data.candidate_fields);
+
       setExtractionMessage(
         "Resume processed. Review the extracted details and fill in any missing fields."
       );
@@ -197,9 +200,11 @@ function App() {
       <main>
         <section className="hero">
           <p>AI POWERED RECRUITMENT</p>
+
           <h1>
             AI Resume <span>Screening</span>
           </h1>
+
           <div>
             Upload a resume or enter candidate details below
             to get a quick screening result.
@@ -209,6 +214,7 @@ function App() {
         <section className="screen-card">
           <div className="upload-heading">
             <div className="upload-icon">↑</div>
+
             <div>
               <h2>Upload Resume</h2>
               <p>Upload a candidate's resume to get started</p>
@@ -224,7 +230,9 @@ function App() {
               setIsDragging(true);
             }}
             onDragLeave={(event) => {
-              if (!event.currentTarget.contains(event.relatedTarget)) {
+              if (
+                !event.currentTarget.contains(event.relatedTarget)
+              ) {
                 setIsDragging(false);
               }
             }}
@@ -242,8 +250,10 @@ function App() {
             {resumeFile ? (
               <div className="selected-file">
                 <div className="file-icon">📄</div>
+
                 <div className="file-details">
                   <strong>{resumeFile.name}</strong>
+
                   <span>
                     {formatSize(resumeFile.size)} · Ready to process
                   </span>
@@ -262,6 +272,7 @@ function App() {
             ) : (
               <>
                 <div className="cloud-icon">⇧</div>
+
                 <h3>Drag and drop your resume here</h3>
                 <p>or choose a file from your computer</p>
 
@@ -294,13 +305,21 @@ function App() {
           {resumeFile && (
             <button
               type="button"
-              className="screen-btn extract-btn"
+              className="extract-resume-btn"
               onClick={handleExtract}
               disabled={extracting}
             >
-              {extracting
-                ? "Extracting Resume Details..."
-                : "Extract Resume Details"}
+              {extracting ? (
+                <>
+                  <span
+                    className="extract-spinner"
+                    aria-hidden="true"
+                  ></span>
+                  Extracting Resume Details...
+                </>
+              ) : (
+                "Extract Resume Details"
+              )}
             </button>
           )}
 
@@ -326,6 +345,7 @@ function App() {
 
           <div className="section-title">
             <div className="profile-icon">♙</div>
+
             <div>
               <h2>Candidate Profile</h2>
               <p>Enter or review the candidate's information</p>
@@ -340,7 +360,7 @@ function App() {
           />
 
           {loading && (
-            <div className="message loading">
+            <div className="message loading" role="status">
               Screening candidate...
             </div>
           )}
@@ -358,7 +378,10 @@ function App() {
                   <small>SCREENING RESULT</small>
                   <h2>{result.result}</h2>
                 </div>
-                <strong>{result.shortlisted_probability}%</strong>
+
+                <strong>
+                  {result.shortlisted_probability}%
+                </strong>
               </div>
 
               <div className="bar">
