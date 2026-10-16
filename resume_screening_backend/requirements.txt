@@ -1,0 +1,10 @@
+Flask
+flask-cors
+joblib
+pandas
+scikit-learn
+PyMuPDF
+pytesseract
+python-docx
+Pillow
+requests

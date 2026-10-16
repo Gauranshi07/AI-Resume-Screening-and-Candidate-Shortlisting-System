@@ -1,0 +1,29 @@
+
+# Frontend dependencies and build files
+node_modules/
+dist/
+
+# Python cache and virtual environments
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Jupyter temporary checkpoints
+.ipynb_checkpoints/
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Datasets - keep out of Git
+*.csv
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Logs
+*.log
