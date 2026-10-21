@@ -31,9 +31,11 @@ function App() {
 
   const fileInputRef = useRef(null);
 
+  // Validate and select resume
   const handleFile = (file) => {
     setFileError("");
     setExtractionMessage("");
+    setError("");
 
     if (!file) return;
 
@@ -65,7 +67,6 @@ function App() {
     setResumeFile(file);
     setInitialData(null);
     setResult(null);
-    setError("");
   };
 
   const handleFileChange = (event) => {
@@ -100,6 +101,7 @@ function App() {
     return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
   };
 
+  // Extract details from the uploaded resume
   const handleExtract = async () => {
     if (!resumeFile) {
       setFileError("Please select a resume first.");
@@ -125,31 +127,35 @@ function App() {
 
       if (!response.ok) {
         throw new Error(
-          data.error || data.details || "Resume extraction failed."
+          data.error ||
+            data.details ||
+            "Resume extraction failed."
         );
       }
 
       if (!data.candidate_fields) {
         throw new Error(
-          "The server did not return candidate fields. Check the extraction API response."
+          "The server did not return candidate fields. Check the backend response."
         );
       }
 
       setInitialData(data.candidate_fields);
 
       setExtractionMessage(
-        "Resume processed. Review the extracted details and fill in any missing fields."
+        "Resume processed successfully. Review the extracted values before screening."
       );
     } catch (err) {
       setFileError(
-        err.message || "Unable to extract resume details. Check the backend."
+        err.message ||
+          "Unable to extract resume details. Check the backend."
       );
     } finally {
       setExtracting(false);
     }
   };
 
-  const handleScreen = async (data) => {
+  // Send candidate details to the prediction API
+  const handleScreen = async (candidateData) => {
     setLoading(true);
     setError("");
     setResult(null);
@@ -160,26 +166,41 @@ function App() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(candidateData),
       });
 
       const resultData = await response.json();
 
       if (!response.ok) {
         throw new Error(
-          resultData.error || "Screening request failed."
+          resultData.error ||
+            resultData.details ||
+            "Screening request failed."
         );
       }
 
       setResult(resultData);
     } catch (err) {
       setError(
-        err.message || "Unable to connect with the screening server."
+        err.message ||
+          "Unable to connect with the screening server."
       );
     } finally {
       setLoading(false);
     }
   };
+
+  // Safely format the probability returned by the backend.
+  const probabilityValue =
+    result?.shortlisted_probability !== undefined &&
+    result?.shortlisted_probability !== null &&
+    result?.shortlisted_probability !== ""
+      ? Number(result.shortlisted_probability)
+      : NaN;
+
+  const validProbability = Number.isFinite(probabilityValue)
+    ? Math.min(100, Math.max(0, probabilityValue))
+    : null;
 
   return (
     <div className="app">
@@ -212,19 +233,21 @@ function App() {
         </section>
 
         <section className="screen-card">
+          {/* Resume upload heading */}
           <div className="upload-heading">
             <div className="upload-icon">↑</div>
 
             <div>
               <h2>Upload Resume</h2>
-              <p>Upload a candidate's resume to get started</p>
+              <p>Upload a candidate&apos;s resume to get started</p>
             </div>
           </div>
 
+          {/* Drag-and-drop upload area */}
           <div
-            className={`upload-zone ${isDragging ? "drag-active" : ""} ${
-              resumeFile ? "has-file" : ""
-            }`}
+            className={`upload-zone ${
+              isDragging ? "drag-active" : ""
+            } ${resumeFile ? "has-file" : ""}`}
             onDragOver={(event) => {
               event.preventDefault();
               setIsDragging(true);
@@ -265,6 +288,7 @@ function App() {
                   onClick={removeFile}
                   aria-label="Remove selected resume"
                   title="Remove file"
+                  disabled={extracting}
                 >
                   ×
                 </button>
@@ -302,12 +326,13 @@ function App() {
             )}
           </div>
 
+          {/* Extract button */}
           {resumeFile && (
             <button
               type="button"
               className="extract-resume-btn"
               onClick={handleExtract}
-              disabled={extracting}
+              disabled={extracting || loading}
             >
               {extracting ? (
                 <>
@@ -337,18 +362,22 @@ function App() {
 
           <div className="upload-note">
             <span>ⓘ</span>
-            Upload a resume to pre-fill available candidate details.
-            Review all fields before screening.
+            <div>
+              Extracted values are estimates. Review experience,
+              project count, skills score and GitHub activity before
+              screening. Missing values may need manual entry.
+            </div>
           </div>
 
           <div className="section-divider"></div>
 
+          {/* Candidate profile */}
           <div className="section-title">
             <div className="profile-icon">♙</div>
 
             <div>
               <h2>Candidate Profile</h2>
-              <p>Enter or review the candidate's information</p>
+              <p>Enter or review the candidate&apos;s information</p>
             </div>
           </div>
 
@@ -357,6 +386,7 @@ function App() {
           <ResumeForm
             onScreen={handleScreen}
             initialData={initialData}
+            loading={loading || extracting}
           />
 
           {loading && (
@@ -371,28 +401,45 @@ function App() {
             </div>
           )}
 
+          {/* Screening result */}
           {result && (
-            <div className="result">
+            <div className="result" aria-live="polite">
               <div className="result-top">
                 <div>
                   <small>SCREENING RESULT</small>
-                  <h2>{result.result}</h2>
+                  <h2>{result.result || "Result unavailable"}</h2>
                 </div>
 
                 <strong>
-                  {result.shortlisted_probability}%
+                  {validProbability === null
+                    ? "N/A"
+                    : `${validProbability.toFixed(2)}%`}
                 </strong>
               </div>
 
-              <div className="bar">
+              <div
+                className="bar"
+                role="progressbar"
+                aria-label="Shortlisting probability"
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={validProbability ?? 0}
+              >
                 <div
                   style={{
-                    width: `${result.shortlisted_probability}%`,
+                    width: `${validProbability ?? 0}%`,
                   }}
-                ></div>
+                />
               </div>
 
-              <p>Shortlisting probability</p>
+              <p>Model-estimated shortlisting probability</p>
+
+              {validProbability === 0 && (
+                <p className="field-hint">
+                  The backend returned a 0% probability. Check the
+                  prediction API and model probability calculation.
+                </p>
+              )}
             </div>
           )}
         </section>

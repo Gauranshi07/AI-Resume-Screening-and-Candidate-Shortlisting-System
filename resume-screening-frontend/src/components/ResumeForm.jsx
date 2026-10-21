@@ -1,8 +1,6 @@
 
 import React, { useEffect, useState } from "react";
 
-
-
 const EMPTY_FORM = {
   experience: "",
   skills_score: "",
@@ -21,7 +19,11 @@ const FIELD_NAMES = {
   github_activity: "GitHub Activity",
 };
 
-const ResumeForm = ({ onScreen, initialData = null, loading = false }) => {
+const ResumeForm = ({
+  onScreen,
+  initialData = null,
+  loading = false,
+}) => {
   const [formData, setFormData] = useState(EMPTY_FORM);
   const [formError, setFormError] = useState("");
 
@@ -34,8 +36,11 @@ const ResumeForm = ({ onScreen, initialData = null, loading = false }) => {
       Object.keys(EMPTY_FORM).forEach((key) => {
         const value = initialData[key];
 
-        // Only replace a field when extraction found a real value.
-        if (value !== undefined && value !== null && value !== "") {
+        if (
+          value !== undefined &&
+          value !== null &&
+          value !== ""
+        ) {
           updated[key] = String(value);
         }
       });
@@ -55,6 +60,19 @@ const ResumeForm = ({ onScreen, initialData = null, loading = false }) => {
     }));
 
     setFormError("");
+  };
+
+  // Display decimal years as readable years and months.
+  const getExperienceLabel = (value) => {
+    if (value === "" || !Number.isFinite(Number(value))) {
+      return "";
+    }
+
+    const totalMonths = Math.round(Number(value) * 12);
+    const years = Math.floor(totalMonths / 12);
+    const months = totalMonths % 12;
+
+    return `${years} year(s), ${months} month(s)`;
   };
 
   const handleSubmit = (event) => {
@@ -87,7 +105,17 @@ const ResumeForm = ({ onScreen, initialData = null, loading = false }) => {
       const value = Number(formData[key]);
 
       if (!Number.isFinite(value) || value < 0) {
-        setFormError(`${FIELD_NAMES[key]} must be a valid non-negative number.`);
+        setFormError(
+          `${FIELD_NAMES[key]} must be a valid non-negative number.`
+        );
+        return;
+      }
+
+      if (
+        ["projects", "resume_length"].includes(key) &&
+        !Number.isInteger(value)
+      ) {
+        setFormError(`${FIELD_NAMES[key]} must be a whole number.`);
         return;
       }
 
@@ -96,6 +124,11 @@ const ResumeForm = ({ onScreen, initialData = null, loading = false }) => {
 
     if (payload.skills_score > 100) {
       setFormError("Skills Score must be between 0 and 100.");
+      return;
+    }
+
+    if (payload.github_activity > 100) {
+      setFormError("GitHub Activity Score must be between 0 and 100.");
       return;
     }
 
@@ -110,27 +143,39 @@ const ResumeForm = ({ onScreen, initialData = null, loading = false }) => {
   return (
     <form className="resume-form" onSubmit={handleSubmit}>
       <div className="form-group">
-        <label htmlFor="experience">Experience (Years)</label>
+        <label htmlFor="experience">Experience</label>
+
         <input
           id="experience"
           type="number"
           name="experience"
-          placeholder="e.g. 1"
+          placeholder="e.g. 0.33"
           value={formData.experience}
           onChange={handleChange}
           min="0"
-          step="0.01"
+          step="any"
           required
         />
+
+        {formData.experience !== "" && (
+          <small className="field-hint">
+            Duration: {getExperienceLabel(formData.experience)}
+          </small>
+        )}
+
+        <small className="field-hint">
+          Enter total experience in years. For example, 4 months = 0.33.
+        </small>
       </div>
 
       <div className="form-group">
         <label htmlFor="skills_score">Skills Score (0–100)</label>
+
         <input
           id="skills_score"
           type="number"
           name="skills_score"
-          placeholder="Enter score manually"
+          placeholder="Enter score"
           value={formData.skills_score}
           onChange={handleChange}
           min="0"
@@ -138,10 +183,15 @@ const ResumeForm = ({ onScreen, initialData = null, loading = false }) => {
           step="any"
           required
         />
+
+        <small className="field-hint">
+          Estimated keyword score; it does not measure actual proficiency.
+        </small>
       </div>
 
       <div className="form-group">
         <label htmlFor="education_level">Education Level</label>
+
         <select
           id="education_level"
           name="education_level"
@@ -159,6 +209,7 @@ const ResumeForm = ({ onScreen, initialData = null, loading = false }) => {
 
       <div className="form-group">
         <label htmlFor="projects">Number of Projects</label>
+
         <input
           id="projects"
           type="number"
@@ -170,10 +221,15 @@ const ResumeForm = ({ onScreen, initialData = null, loading = false }) => {
           step="1"
           required
         />
+
+        <small className="field-hint">
+          Verify this count against the actual project entries in the resume.
+        </small>
       </div>
 
       <div className="form-group">
         <label htmlFor="resume_length">Resume Length (Words)</label>
+
         <input
           id="resume_length"
           type="number"
@@ -188,7 +244,8 @@ const ResumeForm = ({ onScreen, initialData = null, loading = false }) => {
       </div>
 
       <div className="form-group">
-        <label htmlFor="github_activity">GitHub Activity</label>
+        <label htmlFor="github_activity">GitHub Activity Score (0–100)</label>
+
         <input
           id="github_activity"
           type="number"
@@ -197,13 +254,21 @@ const ResumeForm = ({ onScreen, initialData = null, loading = false }) => {
           value={formData.github_activity}
           onChange={handleChange}
           min="0"
+          max="100"
           step="any"
           required
         />
+
+        <small className="field-hint">
+          Estimated score based on available public GitHub data.
+        </small>
       </div>
 
       {formError && (
-        <div className="message error" role="alert">
+        <div
+          className="message error form-error"
+          role="alert"
+        >
           {formError}
         </div>
       )}
