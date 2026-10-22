@@ -31,7 +31,7 @@ function App() {
 
   const fileInputRef = useRef(null);
 
-  // Validate and select resume
+  // Validate the selected resume.
   const handleFile = (file) => {
     setFileError("");
     setExtractionMessage("");
@@ -101,7 +101,7 @@ function App() {
     return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
   };
 
-  // Extract details from the uploaded resume
+  // Extract candidate information from the uploaded resume.
   const handleExtract = async () => {
     if (!resumeFile) {
       setFileError("Please select a resume first.");
@@ -133,16 +133,23 @@ function App() {
         );
       }
 
-      if (!data.candidate_fields) {
+      const extractedFields =
+        data.candidate_fields || data.suggested_fields;
+
+      if (
+        !extractedFields ||
+        typeof extractedFields !== "object"
+      ) {
         throw new Error(
           "The server did not return candidate fields. Check the backend response."
         );
       }
 
-      setInitialData(data.candidate_fields);
+      // ResumeForm maps matching fields and leaves other fields editable.
+      setInitialData(extractedFields);
 
       setExtractionMessage(
-        "Resume processed successfully. Review the extracted values before screening."
+        "Resume processed successfully. Review extracted values and complete the remaining fields."
       );
     } catch (err) {
       setFileError(
@@ -154,7 +161,7 @@ function App() {
     }
   };
 
-  // Send candidate details to the prediction API
+  // Send all 15 candidate fields to the trained model API.
   const handleScreen = async (candidateData) => {
     setLoading(true);
     setError("");
@@ -183,14 +190,14 @@ function App() {
     } catch (err) {
       setError(
         err.message ||
-          "Unable to connect with the screening server."
+          "Unable to connect with the screening server. Make sure Flask is running."
       );
     } finally {
       setLoading(false);
     }
   };
 
-  // Safely format the probability returned by the backend.
+  // Format the model score safely.
   const probabilityValue =
     result?.shortlisted_probability !== undefined &&
     result?.shortlisted_probability !== null &&
@@ -228,7 +235,7 @@ function App() {
 
           <div>
             Upload a resume or enter candidate details below
-            to get a quick screening result.
+            to get a model-based screening result.
           </div>
         </section>
 
@@ -288,7 +295,7 @@ function App() {
                   onClick={removeFile}
                   aria-label="Remove selected resume"
                   title="Remove file"
-                  disabled={extracting}
+                  disabled={extracting || loading}
                 >
                   ×
                 </button>
@@ -319,7 +326,7 @@ function App() {
                 type="button"
                 className="replace-file-btn"
                 onClick={() => fileInputRef.current?.click()}
-                disabled={extracting}
+                disabled={extracting || loading}
               >
                 Replace Resume
               </button>
@@ -363,9 +370,10 @@ function App() {
           <div className="upload-note">
             <span>ⓘ</span>
             <div>
-              Extracted values are estimates. Review experience,
-              project count, skills score and GitHub activity before
-              screening. Missing values may need manual entry.
+              Extracted values are estimates. Review project count,
+              experience, skills score and resume word count.
+              Complete and verify all remaining candidate details
+              before screening.
             </div>
           </div>
 
@@ -420,7 +428,7 @@ function App() {
               <div
                 className="bar"
                 role="progressbar"
-                aria-label="Shortlisting probability"
+                aria-label="Model score"
                 aria-valuemin={0}
                 aria-valuemax={100}
                 aria-valuenow={validProbability ?? 0}
@@ -432,12 +440,12 @@ function App() {
                 />
               </div>
 
-              <p>Model-estimated shortlisting probability</p>
+              <p>Model prediction score — not a hiring guarantee.</p>
 
-              {validProbability === 0 && (
+              {validProbability === null && (
                 <p className="field-hint">
-                  The backend returned a 0% probability. Check the
-                  prediction API and model probability calculation.
+                  The API returned no valid score. Check the
+                  prediction response from the Flask backend.
                 </p>
               )}
             </div>
