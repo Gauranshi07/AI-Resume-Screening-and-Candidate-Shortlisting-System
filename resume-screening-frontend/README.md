@@ -1,16 +1,15 @@
-# React + Vite
+# ResumeAI frontend UI update
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This package contains the refreshed frontend files only. Existing Flask API routes, extraction flow, model payload, and history behavior have been preserved.
 
-Currently, two official plugins are available:
+## Replace these files
+- `src/App.jsx`
+- `src/App.css`
+- `src/components/ResumeForm.jsx`
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Keep your existing `main.jsx`, `package.json`, assets, and backend as they are.
 
-## React Compiler
+## Run
+From your existing frontend project folder, run `npm run dev`. Ensure Flask is running at `http://127.0.0.1:5000`, or set `VITE_API_BASE_URL` to your backend URL.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Note: the supplied source was pasted with formatting escape characters; these were normalized in the JSX/CSS output. Please keep a backup of your original files before replacing them.

@@ -185,275 +185,114 @@ const ResumeForm = ({
     onScreen(payload);
   };
 
+  const sections = [
+    {
+      number: "01",
+      title: "Candidate & education",
+      description: "Basic details and academic background",
+      fields: [
+        { key: "age", label: "Age", type: "number", placeholder: "e.g. 22", min: 1, max: 100, step: 1 },
+        { key: "education_level", label: "Education level", type: "select", options: ["Bachelors", "Masters", "PhD"] },
+        { key: "university_tier", label: "University tier", type: "select", options: ["Tier 1", "Tier 2", "Tier 3"] },
+        { key: "cgpa", label: "CGPA (out of 10)", type: "number", placeholder: "e.g. 8.2", min: 0, max: 10, step: "any" },
+      ],
+    },
+    {
+      number: "02",
+      title: "Experience & activity",
+      description: "Practical experience and project involvement",
+      fields: [
+        { key: "internships", label: "Number of internships", type: "number", placeholder: "e.g. 2", min: 0, step: 1 },
+        { key: "projects", label: "Number of projects", type: "number", placeholder: "e.g. 3", min: 0, step: 1, hint: "Verify the count against the projects listed in the resume." },
+        { key: "experience_years", label: "Experience (years)", type: "number", placeholder: "e.g. 0.5", min: 0, step: "any", hint: "Enter total experience in years; 6 months = 0.5." },
+        { key: "hackathons", label: "Number of hackathons", type: "number", placeholder: "e.g. 1", min: 0, step: 1 },
+        { key: "research_papers", label: "Research papers", type: "number", placeholder: "e.g. 0", min: 0, step: 1 },
+      ],
+    },
+    {
+      number: "03",
+      title: "Skills & credentials",
+      description: "Skills assessment and supporting credentials",
+      fields: [
+        { key: "programming_languages", label: "Programming languages", type: "number", placeholder: "Number of languages", min: 0, step: 1, hint: "Enter a count, not the language names." },
+        { key: "certifications", label: "Certifications", type: "number", placeholder: "Number of certifications", min: 0, step: 1 },
+        { key: "skills_score", label: "Skills score (0–100)", type: "number", placeholder: "Enter skills score", min: 0, max: 100, step: "any", hint: "Use a consistent estimate based on role-related skills." },
+        { key: "soft_skills_score", label: "Soft skills score (0–100)", type: "number", placeholder: "Enter soft skills score", min: 0, max: 100, step: "any" },
+        { key: "resume_length_words", label: "Resume length (words)", type: "number", placeholder: "Approximate word count", min: 0, step: 1, hint: "Review the extracted word count or enter it manually." },
+        { key: "company_type", label: "Company type", type: "select", options: ["MNC", "Mid-size", "Startup"] },
+      ],
+    },
+  ];
+
+  const renderField = (field) => (
+    <div className="form-group" key={field.key}>
+      <label htmlFor={field.key}>{field.label}</label>
+      {field.type === "select" ? (
+        <select
+          id={field.key}
+          name={field.key}
+          value={formData[field.key]}
+          onChange={handleChange}
+          required
+        >
+          <option value="">Select {field.label.toLowerCase()}</option>
+          {field.options.map((option) => (
+            <option value={option} key={option}>{option}</option>
+          ))}
+        </select>
+      ) : (
+        <input
+          id={field.key}
+          type="number"
+          name={field.key}
+          placeholder={field.placeholder}
+          value={formData[field.key]}
+          onChange={handleChange}
+          min={field.min}
+          max={field.max}
+          step={field.step}
+          required
+        />
+      )}
+      {field.key === "experience_years" && formData.experience_years !== "" && (
+        <small className="field-hint">Duration: {getExperienceLabel(formData.experience_years)}</small>
+      )}
+      {field.hint && <small className="field-hint">{field.hint}</small>}
+    </div>
+  );
+
   return (
     <form className="resume-form" onSubmit={handleSubmit}>
-      <div className="form-group">
-        <label htmlFor="age">Age</label>
-        <input
-          id="age"
-          type="number"
-          name="age"
-          placeholder="Enter age"
-          value={formData.age}
-          onChange={handleChange}
-          min="1"
-          max="100"
-          step="1"
-          required
-        />
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="education_level">Education Level</label>
-        <select
-          id="education_level"
-          name="education_level"
-          value={formData.education_level}
-          onChange={handleChange}
-          required
-        >
-          <option value="">Select Education</option>
-          <option value="Bachelors">Bachelors</option>
-          <option value="Masters">Masters</option>
-          <option value="PhD">PhD</option>
-        </select>
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="university_tier">University Tier</label>
-        <select
-          id="university_tier"
-          name="university_tier"
-          value={formData.university_tier}
-          onChange={handleChange}
-          required
-        >
-          <option value="">Select University Tier</option>
-          <option value="Tier 1">Tier 1</option>
-          <option value="Tier 2">Tier 2</option>
-          <option value="Tier 3">Tier 3</option>
-        </select>
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="cgpa">CGPA (out of 10)</label>
-        <input
-          id="cgpa"
-          type="number"
-          name="cgpa"
-          placeholder="e.g. 8.2"
-          value={formData.cgpa}
-          onChange={handleChange}
-          min="0"
-          max="10"
-          step="any"
-          required
-        />
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="internships">Number of Internships</label>
-        <input
-          id="internships"
-          type="number"
-          name="internships"
-          placeholder="Enter internship count"
-          value={formData.internships}
-          onChange={handleChange}
-          min="0"
-          step="1"
-          required
-        />
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="projects">Number of Projects</label>
-        <input
-          id="projects"
-          type="number"
-          name="projects"
-          placeholder="Enter project count"
-          value={formData.projects}
-          onChange={handleChange}
-          min="0"
-          step="1"
-          required
-        />
-        <small className="field-hint">
-          Verify the count against the projects listed in the resume.
-        </small>
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="programming_languages">
-          Number of Programming Languages
-        </label>
-        <input
-          id="programming_languages"
-          type="number"
-          name="programming_languages"
-          placeholder="e.g. 3"
-          value={formData.programming_languages}
-          onChange={handleChange}
-          min="0"
-          step="1"
-          required
-        />
-        <small className="field-hint">
-          Enter the count, not the language names.
-        </small>
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="certifications">Number of Certifications</label>
-        <input
-          id="certifications"
-          type="number"
-          name="certifications"
-          placeholder="Enter certification count"
-          value={formData.certifications}
-          onChange={handleChange}
-          min="0"
-          step="1"
-          required
-        />
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="experience_years">Experience (Years)</label>
-        <input
-          id="experience_years"
-          type="number"
-          name="experience_years"
-          placeholder="e.g. 0.5"
-          value={formData.experience_years}
-          onChange={handleChange}
-          min="0"
-          step="any"
-          required
-        />
-        {formData.experience_years !== "" && (
-          <small className="field-hint">
-            Duration: {getExperienceLabel(formData.experience_years)}
-          </small>
-        )}
-        <small className="field-hint">
-          Enter total experience in years. For example, 6 months = 0.5.
-        </small>
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="hackathons">Number of Hackathons</label>
-        <input
-          id="hackathons"
-          type="number"
-          name="hackathons"
-          placeholder="Enter hackathon count"
-          value={formData.hackathons}
-          onChange={handleChange}
-          min="0"
-          step="1"
-          required
-        />
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="research_papers">Number of Research Papers</label>
-        <input
-          id="research_papers"
-          type="number"
-          name="research_papers"
-          placeholder="Enter research paper count"
-          value={formData.research_papers}
-          onChange={handleChange}
-          min="0"
-          step="1"
-          required
-        />
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="skills_score">Skills Score (0–100)</label>
-        <input
-          id="skills_score"
-          type="number"
-          name="skills_score"
-          placeholder="Enter skills score"
-          value={formData.skills_score}
-          onChange={handleChange}
-          min="0"
-          max="100"
-          step="any"
-          required
-        />
-        <small className="field-hint">
-          Use a consistent estimate based on the candidate's skills.
-        </small>
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="soft_skills_score">Soft Skills Score (0–100)</label>
-        <input
-          id="soft_skills_score"
-          type="number"
-          name="soft_skills_score"
-          placeholder="Enter soft skills score"
-          value={formData.soft_skills_score}
-          onChange={handleChange}
-          min="0"
-          max="100"
-          step="any"
-          required
-        />
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="resume_length_words">Resume Length (Words)</label>
-        <input
-          id="resume_length_words"
-          type="number"
-          name="resume_length_words"
-          placeholder="Enter word count"
-          value={formData.resume_length_words}
-          onChange={handleChange}
-          min="0"
-          step="1"
-          required
-        />
-        <small className="field-hint">
-          Review the extracted word count or enter it manually.
-        </small>
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="company_type">Company Type</label>
-        <select
-          id="company_type"
-          name="company_type"
-          value={formData.company_type}
-          onChange={handleChange}
-          required
-        >
-          <option value="">Select Company Type</option>
-          <option value="MNC">MNC</option>
-          <option value="Mid-size">Mid-size</option>
-          <option value="Startup">Startup</option>
-        </select>
-      </div>
+      {sections.map((section) => (
+        <section className="form-section" key={section.number}>
+          <div className="form-section-label">
+            <span>{section.number}</span>
+            <div>
+              <strong>{section.title}</strong>
+              <small>{section.description}</small>
+            </div>
+          </div>
+          <div className="form-fields">
+            {section.fields.map(renderField)}
+          </div>
+        </section>
+      ))}
 
       {formError && (
-        <div className="message error form-error" role="alert">
+        <div className="notice error form-error" role="alert">
           {formError}
         </div>
       )}
 
-      <button
-        type="submit"
-        className="screen-btn"
-        disabled={loading}
-      >
-        {loading ? "Screening Candidate..." : "Screen Resume"}
-      </button>
+      <div className="form-submit-row">
+        <div>
+          <strong>Ready to evaluate this profile?</strong>
+          <small>Check extracted values before sending them to the screening model.</small>
+        </div>
+        <button type="submit" className="screen-btn screen-submit" disabled={loading}>
+          {loading ? "Screening candidate…" : "Screen resume"}
+        </button>
+      </div>
     </form>
   );
 };
