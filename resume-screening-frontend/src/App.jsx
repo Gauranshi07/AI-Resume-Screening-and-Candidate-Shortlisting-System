@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from "react";
 import ResumeForm from "./components/ResumeForm";
 import "./App.css";
@@ -7,11 +6,27 @@ const API = (import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:5000").repla
 const MAX_SIZE = 10 * 1024 * 1024;
 const EXTENSIONS = ["pdf", "docx", "jpg", "jpeg", "png", "webp"];
 
+function mapHistoryItem(item) {
+  return {
+    id: item.id,
+    // Prefer the uploaded filename; older database rows may not have one.
+    name: item.resume_filename || item.candidate_name || `Candidate ${item.id}`,
+    fileName: item.resume_filename ? "Uploaded resume" : "Saved screening record",
+    result: String(item.result || item.prediction || "Unknown"),
+    score:
+      item.shortlisted_probability == null
+        ? NaN
+        : Number(item.shortlisted_probability),
+    time: item.created_at || "Time unavailable",
+  };
+}
+
 function App() {
   const [apiStatus, setApiStatus] = useState("checking");
   const [modelInfo, setModelInfo] = useState(null);
   const [file, setFile] = useState(null);
   const [initialData, setInitialData] = useState(null);
+  const [extractionMeta, setExtractionMeta] = useState(null);
   const [result, setResult] = useState(null);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -27,6 +42,7 @@ function App() {
 
   useEffect(() => {
     let active = true;
+
     fetch(`${API}/model-info`)
       .then((res) => {
         if (!res.ok) throw new Error("Backend unavailable");
@@ -41,7 +57,37 @@ function App() {
       .catch(() => {
         if (active) setApiStatus("offline");
       });
-    return () => { active = false; };
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const refreshHistory = async () => {
+    const response = await fetch(`${API}/history`);
+    if (!response.ok) throw new Error("Failed to load screening history");
+    const data = await response.json();
+    setHistory((data.history || []).map(mapHistoryItem));
+  };
+
+  useEffect(() => {
+    let active = true;
+
+    const fetchHistory = async () => {
+      try {
+        const response = await fetch(`${API}/history`);
+        if (!response.ok) throw new Error("Failed to load screening history");
+        const data = await response.json();
+        if (active) setHistory((data.history || []).map(mapHistoryItem));
+      } catch (err) {
+        console.error("History loading error:", err);
+      }
+    };
+
+    fetchHistory();
+    return () => {
+      active = false;
+    };
   }, []);
 
   const chooseFile = (selected) => {
@@ -53,27 +99,33 @@ function App() {
     const ext = selected.name.split(".").pop().toLowerCase();
     if (!EXTENSIONS.includes(ext)) {
       setFile(null);
+      setExtractionMeta(null);
       setFileError("Unsupported file. Choose PDF, DOCX, JPG, PNG or WEBP.");
       return;
     }
     if (!selected.size) {
       setFile(null);
+      setExtractionMeta(null);
       setFileError("The selected file is empty.");
       return;
     }
     if (selected.size > MAX_SIZE) {
       setFile(null);
+      setExtractionMeta(null);
       setFileError("Maximum file size is 10 MB.");
       return;
     }
+
     setFile(selected);
     setInitialData(null);
+    setExtractionMeta(null);
     setResult(null);
   };
 
   const clearFile = () => {
     setFile(null);
     setInitialData(null);
+    setExtractionMeta(null);
     setResult(null);
     setFileError("");
     setError("");
@@ -113,7 +165,20 @@ function App() {
       }
 
       setInitialData(fields);
+      setExtractionMeta({
+        history_id: data.history_id ?? null,
+        filename: data.filename || file.name,
+        candidate_name:
+          data.candidate_name || file.name.replace(/\.[^.]+$/, ""),
+      });
       setMessage("Resume extracted. Verify the suggested values and complete all missing fields.");
+
+      // Refresh here too, so an upload-created Pending record can appear immediately.
+      try {
+        await refreshHistory();
+      } catch (historyError) {
+        console.error("History refresh after extraction failed:", historyError);
+      }
     } catch (err) {
       setFileError(`${err.message} Check that Flask is running at ${API}.`);
     } finally {
@@ -131,24 +196,24 @@ function App() {
       const response = await fetch(`${API}/predict`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(candidateData),
+        body: JSON.stringify({
+          ...candidateData,
+          history_id: extractionMeta?.history_id ?? undefined,
+          resume_filename: extractionMeta?.filename || file?.name || null,
+          candidate_name:
+            extractionMeta?.candidate_name ||
+            file?.name?.replace(/\.[^.]+$/, "") ||
+            null,
+        }),
       });
-      const data = await response.json();
 
+      const data = await response.json();
       if (!response.ok) {
         throw new Error(data.error || data.details || "Screening request failed.");
       }
 
       setResult(data);
-      const entry = {
-        id: `${Date.now()}-${Math.random()}`,
-        name: file ? file.name.replace(/\.[^.]+$/, "") : `Candidate ${history.length + 1}`,
-        fileName: file?.name || "Manual entry",
-        result: String(data.result || data.prediction || "Result unavailable"),
-        score: Number(data.shortlisted_probability),
-        time: new Date().toLocaleString(),
-      };
-      setHistory((previous) => [entry, ...previous]);
+      await refreshHistory();
     } catch (err) {
       setError(`${err.message} Check your Flask backend and API URL.`);
     } finally {
@@ -163,15 +228,19 @@ function App() {
 
   const scoreValue = result?.shortlisted_probability;
   const scoreNumber = scoreValue !== undefined && scoreValue !== null && scoreValue !== ""
-    ? Number(scoreValue) : NaN;
+    ? Number(scoreValue)
+    : NaN;
   const score = Number.isFinite(scoreNumber)
-    ? Math.min(100, Math.max(0, scoreNumber)) : null;
+    ? Math.min(100, Math.max(0, scoreNumber))
+    : null;
 
   const shortlisted = history.filter((item) => /shortlist/i.test(item.result)).length;
   const filteredHistory = history.filter((item) => {
     const matchesText = `${item.name} ${item.fileName} ${item.result}`
-      .toLowerCase().includes(search.toLowerCase());
-    const matchesFilter = filter === "All" ||
+      .toLowerCase()
+      .includes(search.toLowerCase());
+    const matchesFilter =
+      filter === "All" ||
       (filter === "Shortlisted" && /shortlist/i.test(item.result)) ||
       (filter === "Other" && !/shortlist/i.test(item.result));
     return matchesText && matchesFilter;
@@ -220,7 +289,7 @@ function App() {
         <div className="page-content" id="overview">
           <section className="welcome">
             <div>
-              <div className="eyebrow"> <span /> AI-POWERED RECRUITMENT</div>
+              <div className="eyebrow"><span /> AI-POWERED RECRUITMENT</div>
               <h1>Recruitment <b>Overview</b></h1>
               <p>Screen resumes, review candidate profiles, and explore model predictions in one workspace.</p>
             </div>
@@ -230,7 +299,7 @@ function App() {
           <section className="stats-grid">
             <article className="stat-card">
               <div className="stat-heading"><span>Candidates screened</span><i className="stat-icon blue">♙</i></div>
-              <strong>{history.length}</strong><small>Current browser session</small>
+              <strong>{history.length}</strong><small>All saved screening records</small>
             </article>
             <article className="stat-card">
               <div className="stat-heading"><span>Shortlisted predictions</span><i className="stat-icon green">✓</i></div>
@@ -317,7 +386,7 @@ function App() {
           </section>
 
           <section className="panel history-panel" id="screening-history">
-            <div className="panel-heading history-heading"><div><h2>Recent screening activity</h2><p>Successful predictions from this browser session.</p></div><span className="record-count">{history.length} records</span></div>
+            <div className="panel-heading history-heading"><div><h2>Recent screening activity</h2><p>Saved screening records from your database.</p></div><span className="record-count">{history.length} records</span></div>
             <div className="history-tools">
               <label className="search-input">⌕ <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search candidate or file…" /></label>
               <select value={filter} onChange={(e) => setFilter(e.target.value)} aria-label="Filter results">
@@ -326,7 +395,7 @@ function App() {
             </div>
             {filteredHistory.length ? <div className="table-scroll"><table><thead><tr><th>Candidate / file</th><th>Prediction</th><th>Probability</th><th>Screened at</th></tr></thead>
               <tbody>{filteredHistory.map((item) => <tr key={item.id}>
-                <td><strong>{item.name}</strong><small className="table-subtitle">{item.fileName}</small></td>
+                <td><strong title={item.name}>{item.name}</strong><small className="table-subtitle">{item.fileName}</small></td>
                 <td><span className={`table-result ${/shortlist/i.test(item.result) ? "positive" : ""}`}>{item.result}</span></td>
                 <td>{Number.isFinite(item.score) ? `${Math.max(0, Math.min(100, item.score)).toFixed(2)}%` : "N/A"}</td>
                 <td>{item.time}</td>
