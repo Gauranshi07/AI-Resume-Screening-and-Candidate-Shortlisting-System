@@ -1,458 +1,343 @@
 
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import ResumeForm from "./components/ResumeForm";
 import "./App.css";
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024;
-
-const SUPPORTED_EXTENSIONS = [
-  "pdf",
-  "docx",
-  "jpg",
-  "jpeg",
-  "png",
-  "webp",
-];
-
-const API_URL = "http://127.0.0.1:5000";
+const API = (import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:5000").replace(/\/$/, "");
+const MAX_SIZE = 10 * 1024 * 1024;
+const EXTENSIONS = ["pdf", "docx", "jpg", "jpeg", "png", "webp"];
 
 function App() {
-  const [result, setResult] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
-  const [resumeFile, setResumeFile] = useState(null);
-  const [fileError, setFileError] = useState("");
-  const [isDragging, setIsDragging] = useState(false);
-
-  const [extracting, setExtracting] = useState(false);
-  const [extractionMessage, setExtractionMessage] = useState("");
+  const [apiStatus, setApiStatus] = useState("checking");
+  const [modelInfo, setModelInfo] = useState(null);
+  const [file, setFile] = useState(null);
   const [initialData, setInitialData] = useState(null);
+  const [result, setResult] = useState(null);
+  const [history, setHistory] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [extracting, setExtracting] = useState(false);
+  const [dragging, setDragging] = useState(false);
+  const [fileError, setFileError] = useState("");
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState("All");
+  const [activeNav, setActiveNav] = useState("Overview");
+  const inputRef = useRef(null);
 
-  const fileInputRef = useRef(null);
+  useEffect(() => {
+    let active = true;
+    fetch(`${API}/model-info`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Backend unavailable");
+        return res.json();
+      })
+      .then((data) => {
+        if (active) {
+          setApiStatus("online");
+          setModelInfo(data);
+        }
+      })
+      .catch(() => {
+        if (active) setApiStatus("offline");
+      });
+    return () => { active = false; };
+  }, []);
 
-  // Validate the selected resume.
-  const handleFile = (file) => {
+  const chooseFile = (selected) => {
     setFileError("");
-    setExtractionMessage("");
     setError("");
+    setMessage("");
+    if (!selected) return;
 
-    if (!file) return;
-
-    const extension = file.name.split(".").pop().toLowerCase();
-
-    if (!SUPPORTED_EXTENSIONS.includes(extension)) {
-      setResumeFile(null);
-      setInitialData(null);
-      setFileError(
-        "Unsupported format. Please select PDF, DOCX, JPG, PNG or WEBP."
-      );
+    const ext = selected.name.split(".").pop().toLowerCase();
+    if (!EXTENSIONS.includes(ext)) {
+      setFile(null);
+      setFileError("Unsupported file. Choose PDF, DOCX, JPG, PNG or WEBP.");
       return;
     }
-
-    if (file.size > MAX_FILE_SIZE) {
-      setResumeFile(null);
-      setInitialData(null);
-      setFileError("File size must be 10 MB or less.");
-      return;
-    }
-
-    if (file.size === 0) {
-      setResumeFile(null);
-      setInitialData(null);
+    if (!selected.size) {
+      setFile(null);
       setFileError("The selected file is empty.");
       return;
     }
-
-    setResumeFile(file);
+    if (selected.size > MAX_SIZE) {
+      setFile(null);
+      setFileError("Maximum file size is 10 MB.");
+      return;
+    }
+    setFile(selected);
     setInitialData(null);
     setResult(null);
   };
 
-  const handleFileChange = (event) => {
-    handleFile(event.target.files?.[0]);
-    event.target.value = "";
-  };
-
-  const handleDrop = (event) => {
-    event.preventDefault();
-    setIsDragging(false);
-    handleFile(event.dataTransfer.files?.[0]);
-  };
-
-  const removeFile = () => {
-    setResumeFile(null);
+  const clearFile = () => {
+    setFile(null);
+    setInitialData(null);
+    setResult(null);
     setFileError("");
-    setExtractionMessage("");
-    setInitialData(null);
-    setResult(null);
     setError("");
-
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
+    setMessage("");
+    if (inputRef.current) inputRef.current.value = "";
   };
 
-  const formatSize = (bytes) => {
-    if (bytes < 1024 * 1024) {
-      return `${(bytes / 1024).toFixed(1)} KB`;
-    }
-
-    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
-  };
-
-  // Extract candidate information from the uploaded resume.
-  const handleExtract = async () => {
-    if (!resumeFile) {
-      setFileError("Please select a resume first.");
+  const extractResume = async () => {
+    if (!file) {
+      setFileError("Choose a resume first.");
       return;
     }
 
     setExtracting(true);
     setFileError("");
-    setExtractionMessage("");
     setError("");
+    setMessage("");
     setResult(null);
 
     try {
-      const formData = new FormData();
-      formData.append("resume", resumeFile);
+      const body = new FormData();
+      body.append("resume", file);
 
-      const response = await fetch(`${API_URL}/extract-resume`, {
+      const response = await fetch(`${API}/extract-resume`, {
         method: "POST",
-        body: formData,
+        body,
       });
-
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(
-          data.error ||
-            data.details ||
-            "Resume extraction failed."
-        );
+        throw new Error(data.error || data.details || "Resume extraction failed.");
       }
 
-      const extractedFields =
-        data.candidate_fields || data.suggested_fields;
-
-      if (
-        !extractedFields ||
-        typeof extractedFields !== "object"
-      ) {
-        throw new Error(
-          "The server did not return candidate fields. Check the backend response."
-        );
+      const fields = data.candidate_fields || data.suggested_fields;
+      if (!fields || typeof fields !== "object") {
+        throw new Error("Candidate fields were not returned by the backend.");
       }
 
-      // ResumeForm maps matching fields and leaves other fields editable.
-      setInitialData(extractedFields);
-
-      setExtractionMessage(
-        "Resume processed successfully. Review extracted values and complete the remaining fields."
-      );
+      setInitialData(fields);
+      setMessage("Resume extracted. Verify the suggested values and complete all missing fields.");
     } catch (err) {
-      setFileError(
-        err.message ||
-          "Unable to extract resume details. Check the backend."
-      );
+      setFileError(`${err.message} Check that Flask is running at ${API}.`);
     } finally {
       setExtracting(false);
     }
   };
 
-  // Send all 15 candidate fields to the trained model API.
-  const handleScreen = async (candidateData) => {
+  const screenCandidate = async (candidateData) => {
     setLoading(true);
     setError("");
+    setMessage("");
     setResult(null);
 
     try {
-      const response = await fetch(`${API_URL}/predict`, {
+      const response = await fetch(`${API}/predict`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(candidateData),
       });
-
-      const resultData = await response.json();
+      const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(
-          resultData.error ||
-            resultData.details ||
-            "Screening request failed."
-        );
+        throw new Error(data.error || data.details || "Screening request failed.");
       }
 
-      setResult(resultData);
+      setResult(data);
+      const entry = {
+        id: `${Date.now()}-${Math.random()}`,
+        name: file ? file.name.replace(/\.[^.]+$/, "") : `Candidate ${history.length + 1}`,
+        fileName: file?.name || "Manual entry",
+        result: String(data.result || data.prediction || "Result unavailable"),
+        score: Number(data.shortlisted_probability),
+        time: new Date().toLocaleString(),
+      };
+      setHistory((previous) => [entry, ...previous]);
     } catch (err) {
-      setError(
-        err.message ||
-          "Unable to connect with the screening server. Make sure Flask is running."
-      );
+      setError(`${err.message} Check your Flask backend and API URL.`);
     } finally {
       setLoading(false);
     }
   };
 
-  // Format the model score safely.
-  const probabilityValue =
-    result?.shortlisted_probability !== undefined &&
-    result?.shortlisted_probability !== null &&
-    result?.shortlisted_probability !== ""
-      ? Number(result.shortlisted_probability)
-      : NaN;
+  const goTo = (id, label) => {
+    setActiveNav(label);
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
-  const validProbability = Number.isFinite(probabilityValue)
-    ? Math.min(100, Math.max(0, probabilityValue))
-    : null;
+  const scoreValue = result?.shortlisted_probability;
+  const scoreNumber = scoreValue !== undefined && scoreValue !== null && scoreValue !== ""
+    ? Number(scoreValue) : NaN;
+  const score = Number.isFinite(scoreNumber)
+    ? Math.min(100, Math.max(0, scoreNumber)) : null;
+
+  const shortlisted = history.filter((item) => /shortlist/i.test(item.result)).length;
+  const filteredHistory = history.filter((item) => {
+    const matchesText = `${item.name} ${item.fileName} ${item.result}`
+      .toLowerCase().includes(search.toLowerCase());
+    const matchesFilter = filter === "All" ||
+      (filter === "Shortlisted" && /shortlist/i.test(item.result)) ||
+      (filter === "Other" && !/shortlist/i.test(item.result));
+    return matchesText && matchesFilter;
+  });
 
   return (
-    <div className="app">
-      <header className="navbar">
-        <div className="logo">
-          <div className="logo-box">R</div>
-          <span>
-            Resume<span>AI</span>
-          </span>
+    <div className="dashboard">
+      <aside className="sidebar">
+        <div className="brand">
+          <div className="brand-logo">R<span>✦</span></div>
+          <div><strong>Resume<span>AI</span></strong><small>HIRING INTELLIGENCE</small></div>
         </div>
 
-        <div className="server-status">
-          <i></i>
-          Candidate Evaluation
+        <p className="nav-label">WORKSPACE</p>
+        <nav className="side-nav">
+          <button className={activeNav === "Overview" ? "nav-link active" : "nav-link"}
+            onClick={() => goTo("overview", "Overview")}>▦ <span>Overview</span></button>
+          <button className={activeNav === "Screen resume" ? "nav-link active" : "nav-link"}
+            onClick={() => goTo("screen-workspace", "Screen resume")}>⇧ <span>Screen resume</span></button>
+          <button className={activeNav === "Screening history" ? "nav-link active" : "nav-link"}
+            onClick={() => goTo("screening-history", "Screening history")}>◷ <span>Screening history</span><em>{history.length}</em></button>
+        </nav>
+
+        <div className="sidebar-bottom">
+          <div className="human-review">
+            <span>◇</span>
+            <div><strong>Human review first</strong><p>Predictions support assessment. They do not replace hiring judgment.</p></div>
+          </div>
+          <div className="workspace-user">
+            <div className="user-avatar">RA</div>
+            <div><strong>Recruitment workspace</strong><small>Local environment</small></div>
+            <i className={`status-dot ${apiStatus}`} />
+          </div>
         </div>
-      </header>
+      </aside>
 
-      <main>
-        <section className="hero">
-          <p>AI POWERED RECRUITMENT</p>
-
-          <h1>
-            AI Resume <span>Screening</span>
-          </h1>
-
-          <div>
-            Upload a resume or enter candidate details below
-            to get a model-based screening result.
+      <main className="main-panel">
+        <header className="topbar">
+          <div className="mobile-brand"><div className="brand-logo">R</div><strong>Resume<span>AI</span></strong></div>
+          <div className="breadcrumb">Workspace <span>/</span> <strong>{activeNav}</strong></div>
+          <div className={`api-status ${apiStatus}`}>
+            <i />{apiStatus === "online" ? "Backend connected" : apiStatus === "offline" ? "Backend offline" : "Checking backend"}
           </div>
-        </section>
+        </header>
 
-        <section className="screen-card">
-          {/* Resume upload heading */}
-          <div className="upload-heading">
-            <div className="upload-icon">↑</div>
-
+        <div className="page-content" id="overview">
+          <section className="welcome">
             <div>
-              <h2>Upload Resume</h2>
-              <p>Upload a candidate&apos;s resume to get started</p>
+              <div className="eyebrow"> <span /> AI-POWERED RECRUITMENT</div>
+              <h1>Recruitment <b>Overview</b></h1>
+              <p>Screen resumes, review candidate profiles, and explore model predictions in one workspace.</p>
             </div>
-          </div>
+            <button className="primary-button" onClick={() => goTo("screen-workspace", "Screen resume")}>＋ Screen a resume</button>
+          </section>
 
-          {/* Drag-and-drop upload area */}
-          <div
-            className={`upload-zone ${
-              isDragging ? "drag-active" : ""
-            } ${resumeFile ? "has-file" : ""}`}
-            onDragOver={(event) => {
-              event.preventDefault();
-              setIsDragging(true);
-            }}
-            onDragLeave={(event) => {
-              if (
-                !event.currentTarget.contains(event.relatedTarget)
-              ) {
-                setIsDragging(false);
-              }
-            }}
-            onDrop={handleDrop}
-          >
-            <input
-              ref={fileInputRef}
-              type="file"
-              className="file-input"
-              accept=".pdf,.docx,.jpg,.jpeg,.png,.webp"
-              onChange={handleFileChange}
-              aria-label="Choose a resume file"
-            />
+          <section className="stats-grid">
+            <article className="stat-card">
+              <div className="stat-heading"><span>Candidates screened</span><i className="stat-icon blue">♙</i></div>
+              <strong>{history.length}</strong><small>Current browser session</small>
+            </article>
+            <article className="stat-card">
+              <div className="stat-heading"><span>Shortlisted predictions</span><i className="stat-icon green">✓</i></div>
+              <strong>{shortlisted}</strong><small>Based on model responses</small>
+            </article>
+            <article className="stat-card">
+              <div className="stat-heading"><span>Other predictions</span><i className="stat-icon amber">⌁</i></div>
+              <strong>{history.length - shortlisted}</strong><small>Not labelled as shortlisted</small>
+            </article>
+            <article className="stat-card">
+              <div className="stat-heading"><span>Screening service</span><i className={`stat-icon ${apiStatus === "online" ? "green" : "blue"}`}>⌁</i></div>
+              <strong className={`service-value ${apiStatus}`}>{apiStatus === "online" ? "Connected" : apiStatus === "offline" ? "Unavailable" : "Checking…"}</strong>
+              <small>{modelInfo ? "Model info endpoint responded" : "Flask /model-info"}</small>
+            </article>
+          </section>
 
-            {resumeFile ? (
-              <div className="selected-file">
-                <div className="file-icon">📄</div>
+          <section className="panel" id="screen-workspace">
+            <div className="panel-heading">
+              <div className="panel-heading-icon">▤</div>
+              <div><h2>Screen a candidate</h2><p>Upload a resume, review the extracted details, and run the model.</p></div>
+              <span className="step-count">3-step workflow</span>
+            </div>
 
-                <div className="file-details">
-                  <strong>{resumeFile.name}</strong>
+            <div className="steps">
+              <div className="step active"><i>1</i><div><strong>Upload</strong><small>Select resume</small></div></div><span className="step-line" />
+              <div className={`step ${initialData ? "done" : ""}`}><i>{initialData ? "✓" : "2"}</i><div><strong>Review</strong><small>Verify fields</small></div></div><span className="step-line" />
+              <div className={`step ${result ? "done" : ""}`}><i>{result ? "✓" : "3"}</i><div><strong>Predict</strong><small>View result</small></div></div>
+            </div>
 
-                  <span>
-                    {formatSize(resumeFile.size)} · Ready to process
-                  </span>
+            <div className={`drop-zone ${dragging ? "dragging" : ""} ${file ? "has-file" : ""}`}
+              onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+              onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setDragging(false); }}
+              onDrop={(e) => { e.preventDefault(); setDragging(false); chooseFile(e.dataTransfer.files?.[0]); }}>
+              <input ref={inputRef} type="file" accept=".pdf,.docx,.jpg,.jpeg,.png,.webp"
+                onChange={(e) => { chooseFile(e.target.files?.[0]); e.target.value = ""; }} />
+              {file ? <>
+                <div className="upload-icon selected">▤</div>
+                <strong className="filename">{file.name}</strong>
+                <p>{file.size < 1048576 ? `${(file.size / 1024).toFixed(1)} KB` : `${(file.size / 1048576).toFixed(2)} MB`} · Ready to process</p>
+                <div className="file-buttons">
+                  <button className="text-button" onClick={() => inputRef.current?.click()} disabled={loading || extracting}>Replace file</button>
+                  <button className="text-button danger" onClick={clearFile} disabled={loading || extracting}>Remove</button>
                 </div>
+              </> : <>
+                <div className="upload-icon">⇧</div>
+                <h3>Drop your resume here</h3>
+                <p>or browse files from your computer</p>
+                <button className="secondary-button" onClick={() => inputRef.current?.click()}>Choose resume</button>
+                <small>PDF, DOCX, JPG, PNG, WEBP · Maximum 10 MB</small>
+              </>}
+            </div>
 
-                <button
-                  type="button"
-                  className="remove-file"
-                  onClick={removeFile}
-                  aria-label="Remove selected resume"
-                  title="Remove file"
-                  disabled={extracting || loading}
-                >
-                  ×
-                </button>
+            <div className="upload-help">
+              <div><span>✦</span><section><strong>Smart field extraction</strong><p>Extracted values are suggestions. Confirm them against the resume.</p></section></div>
+              <div><span>◇</span><section><strong>Review before prediction</strong><p>Check projects, experience, skill scores and word count.</p></section></div>
+            </div>
+
+            {fileError && <div className="notice error" role="alert">{fileError}</div>}
+            {message && <div className="notice success" role="status">✓ {message}</div>}
+            {file && <button className="primary-button full-button" onClick={extractResume} disabled={extracting || loading}>
+              {extracting ? "◌ Extracting resume details…" : "✦ Extract resume details"}
+            </button>}
+
+            <div className="divider-label"><span>Candidate information</span></div>
+            <div className="candidate-heading"><div><h3>Candidate profile</h3><p>Fill manually or review values populated from resume extraction.</p></div>
+              <span className={initialData ? "review-label ready" : "review-label"}>{initialData ? "Review extracted data" : "Manual entry available"}</span>
+            </div>
+
+            <ResumeForm onScreen={screenCandidate} initialData={initialData} loading={loading || extracting} />
+
+            {loading && <div className="notice loading" role="status">◌ Sending candidate profile to the screening model…</div>}
+            {error && <div className="notice error" role="alert">{error}</div>}
+
+            {result && <section className="result-panel" aria-live="polite">
+              <div className="result-heading"><div><div className="eyebrow">MODEL OUTPUT</div><h3>Screening result</h3></div>
+                <span className={`result-badge ${/shortlist/i.test(String(result.result || "")) ? "positive" : ""}`}>{result.result || "Result unavailable"}</span>
               </div>
-            ) : (
-              <>
-                <div className="cloud-icon">⇧</div>
-
-                <h3>Drag and drop your resume here</h3>
-                <p>or choose a file from your computer</p>
-
-                <button
-                  type="button"
-                  className="choose-file-btn"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  Choose Resume
-                </button>
-
-                <span className="file-hint">
-                  PDF, DOCX, JPG, PNG, WEBP · Max 10 MB
-                </span>
-              </>
-            )}
-
-            {resumeFile && (
-              <button
-                type="button"
-                className="replace-file-btn"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={extracting || loading}
-              >
-                Replace Resume
-              </button>
-            )}
-          </div>
-
-          {/* Extract button */}
-          {resumeFile && (
-            <button
-              type="button"
-              className="extract-resume-btn"
-              onClick={handleExtract}
-              disabled={extracting || loading}
-            >
-              {extracting ? (
-                <>
-                  <span
-                    className="extract-spinner"
-                    aria-hidden="true"
-                  ></span>
-                  Extracting Resume Details...
-                </>
-              ) : (
-                "Extract Resume Details"
-              )}
-            </button>
-          )}
-
-          {fileError && (
-            <div className="file-error" role="alert">
-              {fileError}
-            </div>
-          )}
-
-          {extractionMessage && (
-            <div className="message loading" role="status">
-              {extractionMessage}
-            </div>
-          )}
-
-          <div className="upload-note">
-            <span>ⓘ</span>
-            <div>
-              Extracted values are estimates. Review project count,
-              experience, skills score and resume word count.
-              Complete and verify all remaining candidate details
-              before screening.
-            </div>
-          </div>
-
-          <div className="section-divider"></div>
-
-          {/* Candidate profile */}
-          <div className="section-title">
-            <div className="profile-icon">♙</div>
-
-            <div>
-              <h2>Candidate Profile</h2>
-              <p>Enter or review the candidate&apos;s information</p>
-            </div>
-          </div>
-
-          <div className="line"></div>
-
-          <ResumeForm
-            onScreen={handleScreen}
-            initialData={initialData}
-            loading={loading || extracting}
-          />
-
-          {loading && (
-            <div className="message loading" role="status">
-              Screening candidate...
-            </div>
-          )}
-
-          {error && (
-            <div className="message error" role="alert">
-              {error}
-            </div>
-          )}
-
-          {/* Screening result */}
-          {result && (
-            <div className="result" aria-live="polite">
-              <div className="result-top">
-                <div>
-                  <small>SCREENING RESULT</small>
-                  <h2>{result.result || "Result unavailable"}</h2>
-                </div>
-
-                <strong>
-                  {validProbability === null
-                    ? "N/A"
-                    : `${validProbability.toFixed(2)}%`}
-                </strong>
+              <div className="score-row"><div><small>Shortlisted probability</small><strong>{score === null ? "N/A" : `${score.toFixed(2)}%`}</strong></div>
+                <div className="score-circle" style={{ "--score": `${score ?? 0}%` }}><span>{score === null ? "—" : `${Math.round(score)}%`}</span></div>
               </div>
+              <div className="score-track"><span style={{ width: `${score ?? 0}%` }} /></div>
+              <p className="disclaimer">◇ This is a model prediction, not a hiring guarantee. Review the candidate information and use fair, job-related criteria.</p>
+            </section>}
+          </section>
 
-              <div
-                className="bar"
-                role="progressbar"
-                aria-label="Model score"
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-valuenow={validProbability ?? 0}
-              >
-                <div
-                  style={{
-                    width: `${validProbability ?? 0}%`,
-                  }}
-                />
-              </div>
-
-              <p>Model prediction score — not a hiring guarantee.</p>
-
-              {validProbability === null && (
-                <p className="field-hint">
-                  The API returned no valid score. Check the
-                  prediction response from the Flask backend.
-                </p>
-              )}
+          <section className="panel history-panel" id="screening-history">
+            <div className="panel-heading history-heading"><div><h2>Recent screening activity</h2><p>Successful predictions from this browser session.</p></div><span className="record-count">{history.length} records</span></div>
+            <div className="history-tools">
+              <label className="search-input">⌕ <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search candidate or file…" /></label>
+              <select value={filter} onChange={(e) => setFilter(e.target.value)} aria-label="Filter results">
+                <option value="All">All results</option><option value="Shortlisted">Shortlisted</option><option value="Other">Other results</option>
+              </select>
             </div>
-          )}
-        </section>
+            {filteredHistory.length ? <div className="table-scroll"><table><thead><tr><th>Candidate / file</th><th>Prediction</th><th>Probability</th><th>Screened at</th></tr></thead>
+              <tbody>{filteredHistory.map((item) => <tr key={item.id}>
+                <td><strong>{item.name}</strong><small className="table-subtitle">{item.fileName}</small></td>
+                <td><span className={`table-result ${/shortlist/i.test(item.result) ? "positive" : ""}`}>{item.result}</span></td>
+                <td>{Number.isFinite(item.score) ? `${Math.max(0, Math.min(100, item.score)).toFixed(2)}%` : "N/A"}</td>
+                <td>{item.time}</td>
+              </tr>)}</tbody></table></div> :
+              <div className="empty-state"><div>▤</div><strong>{history.length ? "No matching records" : "No screening activity yet"}</strong>
+                <p>{history.length ? "Try another search or filter." : "Screen your first candidate and the result will appear here."}</p>
+              </div>}
+          </section>
 
-        <footer>ResumeAI • Candidate Screening</footer>
+          <footer className="app-footer"><strong>ResumeAI</strong><span>AI-assisted screening · Human review required</span><span>React UI · Flask API</span></footer>
+        </div>
       </main>
     </div>
   );
