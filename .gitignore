@@ -29,3 +29,4 @@ Thumbs.db
 # Logs
 *.log
 resume_screening_backend/shortlisting_model.pkl
+resume_screening_backend/screening_history.db

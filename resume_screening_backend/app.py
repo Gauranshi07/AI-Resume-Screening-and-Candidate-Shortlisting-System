@@ -1,6 +1,7 @@
 import io
 
 import os
+import shutil
 
 import re
 
@@ -38,10 +39,13 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 MODEL_PATH = os.path.join(BASE_DIR, "shortlisting_model.pkl")
 
-TESSERACT_PATH = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+TESSERACT_PATH = (
+    os.getenv("TESSERACT_CMD")
+    or shutil.which("tesseract")
+    or r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+)
 
 if os.path.isfile(TESSERACT_PATH):
-
     pytesseract.pytesseract.tesseract_cmd = TESSERACT_PATH
 
 if not os.path.isfile(MODEL_PATH):
