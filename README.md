@@ -2,7 +2,11 @@
 
 
 
-An intelligent resume screening and candidate shortlisting application built using React, Flask, Python, and Machine Learning.
+An AI-powered Resume Screening and Candidate Shortlisting System that analyzes uploaded resumes, extracts candidate information, and predicts whether a candidate is suitable for shortlisting using a Machine Learning model.
+
+
+
+The application provides a React-based frontend and a Python Flask backend to make resume screening easier and more efficient.
 
 
 
@@ -14,15 +18,19 @@ An intelligent resume screening and candidate shortlisting application built usi
 
 \- Extract resume text using PyMuPDF, python-docx, and Tesseract OCR.
 
-\- Predict candidate shortlisting using a trained Machine Learning model.
-
 \- Analyze candidate information and skills.
 
-\- View screening history.
+\- Predict candidate shortlisting using a Machine Learning model.
 
-\- Delete individual screening records.
+\- View previous screening records.
 
-\- React-based user interface with Flask REST APIs.
+\- Delete individual screening history records.
+
+\- Store screening history using SQLite.
+
+\- Interactive React-based user interface.
+
+\- Flask REST API integration.
 
 
 
@@ -30,53 +38,51 @@ An intelligent resume screening and candidate shortlisting application built usi
 
 
 
-\### 1. Dashboard
+\### 1. Resume Dashboard
 
-!\[Resume Dashboard](Screenshots/resume\_dashboard.png)
+
+
+!\[Resume Dashboard](Screenshots/resume-dashboard.png)
 
 
 
 \### 2. Resume Upload
 
-!\[Resume Upload](Screenshots/resume\_upload.png)
+
+
+!\[Resume Upload](Screenshots/resume-upload.png)
 
 
 
-\### 3. Resume Screening
+\### 3. Resume Screening – Step 1
 
 
 
-!\[Resume Screening - Step 1](Screenshots/resume\_screening%201.png)
+!\[Resume Screening Step 1](Screenshots/resume-screening%201.png)
 
 
 
-!\[Resume Screening - Step 2](Screenshots/resume\_screening%202.png)
+\### 4. Resume Screening – Step 2
 
 
 
-\### 4. Screening Results
+!\[Resume Screening Step 2](Screenshots/resume\_screening%202.png)
 
 
 
-\*\*Shortlisted Candidate\*\*
+\### 5. Screening Result
 
 
 
-!\[Shortlisted Result](Screenshots/resume\_result\_shortlisted.png)
+!\[Resume Screening Result](Screenshots/resume\_result.png)
 
 
 
-\*\*Not Shortlisted Candidate\*\*
+\### 6. Screening History
 
 
 
-!\[Not Shortlisted Result](Screenshots/resume\_result\_not\_shortlisted.png)
-
-
-
-\### 5. Screening History
-
-!\[Screening History](Screenshots/resume\_history.png)
+!\[Resume Screening History](Screenshots/resume\_history.png)
 
 
 
@@ -84,23 +90,21 @@ An intelligent resume screening and candidate shortlisting application built usi
 
 
 
-\*\*Frontend:\*\* React, JavaScript, CSS
+| Category | Technologies |
 
+|---|---|
 
+| Frontend | React, JavaScript, CSS |
 
-\*\*Backend:\*\* Python, Flask, Flask-CORS
+| Backend | Python, Flask, Flask-CORS |
 
+| Machine Learning | Scikit-learn, Pandas, NumPy, Joblib |
 
+| Resume Processing | PyMuPDF, python-docx, Pytesseract, Pillow |
 
-\*\*Machine Learning:\*\* Scikit-learn, Pandas, NumPy, Joblib
+| Database | SQLite |
 
-
-
-\*\*Resume Processing:\*\* PyMuPDF, python-docx, Pytesseract, Pillow
-
-
-
-\*\*Database:\*\* SQLite
+| Development Tools | VS Code, Git, GitHub |
 
 
 
@@ -110,17 +114,19 @@ An intelligent resume screening and candidate shortlisting application built usi
 
 ```text
 
-AI-Resume-Screening-and-Candidate-Shortlisting-System/
+AI Resume Screening and Candidate Shortlisting System/
 
 │
 
 ├── resume-screening-frontend/
 
-│   ├── src/
-
 │   ├── public/
 
-│   └── package.json
+│   ├── src/
+
+│   ├── package.json
+
+│   └── ...
 
 │
 
@@ -130,7 +136,27 @@ AI-Resume-Screening-and-Candidate-Shortlisting-System/
 
 │   ├── requirements.txt
 
-│   └── shortlisting\_model.pkl
+│   ├── shortlisting\_model.pkl
+
+│   ├── education\_encoder.pkl
+
+│   └── screening\_history.db
+
+│
+
+├── Screenshots/
+
+│   ├── resume-dashboard.png
+
+│   ├── resume-upload.png
+
+│   ├── resume-screening 1.png
+
+│   ├── resume\_screening 2.png
+
+│   ├── resume\_result.png
+
+│   └── resume\_history.png
 
 │
 
@@ -144,27 +170,91 @@ AI-Resume-Screening-and-Candidate-Shortlisting-System/
 
 
 
-The trained model is hosted on Hugging Face because its size exceeds GitHub's standard file upload limit.
+The application uses a trained Machine Learning model to predict candidate shortlisting based on resume-related features.
 
 
 
-\*\*Download Model:\*\*
+The model uses the following features:
 
 
 
-\[Download shortlisting\_model.pkl](https://huggingface.co/gauranshi05/resume-screening-model/resolve/main/shortlisting\_model.pkl)
+\- Years of Experience
+
+\- Skills Match Score
+
+\- Education Level
+
+\- Project Count
+
+\- Resume Length
+
+\- GitHub Activity
 
 
 
-Place the downloaded file inside:
+\### Download the Model
 
 
 
-`resume\_screening\_backend/`
+The trained model is hosted on Hugging Face because of its large file size.
 
 
 
-\## Backend Setup
+\*\*\[Download Shortlisting Model](https://huggingface.co/gauranshi05/resume-screening-model/resolve/main/shortlisting\_model.pkl)\*\*
+
+
+
+After downloading, place `shortlisting\_model.pkl` inside the `resume\_screening\_backend/` directory.
+
+
+
+\## Installation and Setup
+
+
+
+\### Prerequisites
+
+
+
+Make sure the following are installed:
+
+
+
+\- Python
+
+\- Node.js and npm
+
+\- Git
+
+\- Tesseract OCR
+
+
+
+\### 1. Clone the Repository
+
+
+
+```bash
+
+git clone https://github.com/Gauranshi07/AI-Resume-Screening-and-Candidate-Shortlisting-System.git
+
+```
+
+
+
+```bash
+
+cd AI-Resume-Screening-and-Candidate-Shortlisting-System
+
+```
+
+
+
+\### 2. Backend Setup
+
+
+
+Navigate to the backend directory:
 
 
 
@@ -172,19 +262,55 @@ Place the downloaded file inside:
 
 cd resume\_screening\_backend
 
+```
 
+
+
+Create a virtual environment:
+
+
+
+```bash
 
 python -m venv .venv
 
+```
 
+
+
+Activate the virtual environment on Windows:
+
+
+
+```bash
 
 .venv\\Scripts\\activate
 
+```
 
+
+
+Install the required dependencies:
+
+
+
+```bash
 
 pip install -r requirements.txt
 
+```
 
+
+
+Download the Machine Learning model from the Hugging Face link above and place it inside the backend directory.
+
+
+
+Start the Flask server:
+
+
+
+```bash
 
 python app.py
 
@@ -192,19 +318,23 @@ python app.py
 
 
 
-The Flask backend runs locally at:
+The backend will run at:
 
 
 
-`http://127.0.0.1:5000`
+```text
+
+http://127.0.0.1:5000
+
+```
 
 
 
-\## Frontend Setup
+\### 3. Frontend Setup
 
 
 
-Open another terminal:
+Open a new terminal and navigate to the frontend directory:
 
 
 
@@ -212,15 +342,35 @@ Open another terminal:
 
 cd resume-screening-frontend
 
+```
 
+
+
+Install the dependencies:
+
+
+
+```bash
 
 npm install
 
+```
 
+
+
+Start the development server:
+
+
+
+```bash
 
 npm run dev
 
 ```
+
+
+
+Open the local URL displayed in your terminal to access the application.
 
 
 
@@ -232,33 +382,55 @@ npm run dev
 
 |---|---|---|
 
-| GET | `/` | Backend status |
+| GET | `/` | Check backend status |
 
-| GET | `/model-info` | Model information |
+| GET | `/model-info` | Get Machine Learning model information |
 
-| GET | `/history` | Screening history |
+| GET | `/history` | Retrieve screening history |
 
-| GET | `/history/<record\_id>` | Individual screening record |
+| GET | `/history/<record\_id>` | Retrieve an individual screening record |
 
 | DELETE | `/history/<record\_id>` | Delete a screening record |
 
-| POST | `/extract-resume` | Extract resume information |
+| POST | `/extract-resume` | Extract text from an uploaded resume |
 
 | POST | `/predict` | Predict candidate shortlisting |
 
 
 
-\## Notes
+\## Resume Processing
 
 
 
-\- The trained model file is hosted externally on Hugging Face.
+The system supports multiple resume formats:
 
-\- The dataset and sensitive files are not included in this repository.
 
-\- Screening history is stored using SQLite.
 
-\- Tesseract OCR must be installed separately for image-based resume extraction.
+\- \*\*PDF:\*\* Text extraction using PyMuPDF.
+
+\- \*\*DOCX:\*\* Text extraction using python-docx.
+
+\- \*\*Images:\*\* OCR-based text extraction using Tesseract.
+
+
+
+Tesseract OCR must be installed separately on the system for image-based resume processing.
+
+
+
+\## Important Notes
+
+
+
+\- The trained Machine Learning model is hosted externally on Hugging Face.
+
+\- Download the model before starting the backend.
+
+\- The SQLite database stores screening history locally.
+
+\- Dataset files, model files, environment files, and local database files are excluded from the Git repository where configured in `.gitignore`.
+
+\- The application requires both the Flask backend and React frontend to be running.
 
 
 
@@ -270,5 +442,15 @@ npm run dev
 
 
 
-GitHub: \[Gauranshi07](https://github.com/Gauranshi07)
+\- GitHub: \[Gauranshi07](https://github.com/Gauranshi07)
+
+\- Project Repository: \[AI Resume Screening and Candidate Shortlisting System](https://github.com/Gauranshi07/AI-Resume-Screening-and-Candidate-Shortlisting-System)
+
+
+
+\---
+
+
+
+\*Developed as a Machine Learning-based application to simplify resume analysis and candidate shortlisting.\*
 
